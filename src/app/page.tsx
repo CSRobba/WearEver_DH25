@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import styles from "./page.module.css";
 
 export default function Home() {
@@ -17,11 +18,10 @@ export default function Home() {
       <nav className={styles.nav}>
         <div className={styles.logo}>✨ WearEver</div>
         <ul className={styles.navLinks}>
-          <li><a href="#upload">Upload</a></li>
-          <li><a href="#match">Match</a></li>
-          <li><a href="#closet">Closet</a></li>
-          <li><a href="#rewards">Rewards</a></li>
-          <li><a href="#login">Login</a></li>
+          <li><Link href="/upload">Upload</Link></li>
+          <li><Link href="/match">Match</Link></li>
+          <li><Link href="/closet">Closet</Link></li>
+          <li><Link href="/rewards">Rewards</Link></li>
         </ul>
       </nav>
 
