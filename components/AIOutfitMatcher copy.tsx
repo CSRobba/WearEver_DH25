@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Upload, Sparkles, X, AlertCircle } from 'lucide-react';
+import { Upload, Sparkles, X } from 'lucide-react';
 import { AIMatchedTags } from '@/lib/types';
 
 interface AIOutfitMatcherProps {
@@ -9,36 +9,14 @@ interface AIOutfitMatcherProps {
   onReset: () => void;
 }
 
-// Your actual API Gateway endpoint
-const API_ENDPOINT = process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'https://ucxsm64wu3.execute-api.us-east-1.amazonaws.com/dev';
-const S3_BUCKET = 'my-fashion-images';
-
 export default function AIOutfitMatcher({ onTagsMatched, onReset }: AIOutfitMatcherProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const [matchedTags, setMatchedTags] = useState<AIMatchedTags | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file size (10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        setError('Image must be smaller than 10MB');
-        return;
-      }
-
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        setError('Please upload an image file');
-        return;
-      }
-
-      setError(null);
-      setSelectedFile(file);
-      
       const reader = new FileReader();
       reader.onload = (event) => {
         setSelectedImage(event.target?.result as string);
@@ -47,98 +25,27 @@ export default function AIOutfitMatcher({ onTagsMatched, onReset }: AIOutfitMatc
     }
   };
 
-  const uploadToS3 = async (file: File): Promise<string> => {
-    // Generate unique filename
-    const timestamp = Date.now();
-    const randomStr = Math.random().toString(36).substring(7);
-    const fileExt = file.name.split('.').pop();
-    const imageKey = `uploads/${timestamp}-${randomStr}.${fileExt}`;
-
-    // Get presigned URL from your backend (you'll need to create this endpoint)
-    const presignedResponse = await fetch('/api/get-presigned-url', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        fileName: imageKey,
-        fileType: file.type 
-      })
-    });
-
-    if (!presignedResponse.ok) {
-      throw new Error('Failed to get upload URL');
-    }
-
-    const { uploadUrl } = await presignedResponse.json();
-
-    // Upload to S3 using presigned URL
-    const uploadResponse = await fetch(uploadUrl, {
-      method: 'PUT',
-      body: file,
-      headers: {
-        'Content-Type': file.type,
-      },
-    });
-
-    if (!uploadResponse.ok) {
-      throw new Error('Failed to upload image');
-    }
-
-    return imageKey;
-  };
-
-  const analyzeImage = async () => {
-    if (!selectedFile) return;
-
+  const analyzeImage = () => {
     setIsAnalyzing(true);
-    setError(null);
-
-    try {
-      // Step 1: Upload image to S3
-      setIsUploading(true);
-      const imageKey = await uploadToS3(selectedFile);
-      setIsUploading(false);
-
-      // Step 2: Call Lambda via API Gateway to analyze
-      const response = await fetch(API_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ image_key: imageKey }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Server error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      // Transform the response to match your component's expected format
-      const tags: AIMatchedTags = {
-        category: data.tags.category,
-        color: Array.isArray(data.tags.color) ? data.tags.color[0] : data.tags.color,
-        style: Array.isArray(data.tags.style) ? data.tags.style[0] : data.tags.style,
-        fit: Array.isArray(data.tags.fit) ? data.tags.fit[0] : data.tags.fit,
-        vibe: Array.isArray(data.tags.vibe) ? data.tags.vibe[0] : data.tags.vibe,
+    
+    setTimeout(() => {
+      const mockTags: AIMatchedTags = {
+        category: 'dress',
+        color: 'pink',
+        style: 'cottagecore',
+        fit: 'flowy',
+        vibe: 'casual'
       };
-
-      setMatchedTags(tags);
-      onTagsMatched(tags);
-    } catch (err) {
-      console.error('Analysis error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to analyze image. Please try again.');
-    } finally {
+      
+      setMatchedTags(mockTags);
       setIsAnalyzing(false);
-      setIsUploading(false);
-    }
+      onTagsMatched(mockTags);
+    }, 1500);
   };
 
   const handleReset = () => {
     setSelectedImage(null);
-    setSelectedFile(null);
     setMatchedTags(null);
-    setError(null);
     onReset();
   };
 
@@ -152,13 +59,6 @@ export default function AIOutfitMatcher({ onTagsMatched, onReset }: AIOutfitMatc
       <p className="text-gray-600 mb-4 text-sm">
         Upload an image of your dream outfit or aesthetic, and our AI will find matching clothes!
       </p>
-
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-lg flex items-start gap-2">
-          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-          <p className="text-red-700 text-sm">{error}</p>
-        </div>
-      )}
 
       {!selectedImage ? (
         <label className="block cursor-pointer">
@@ -184,8 +84,7 @@ export default function AIOutfitMatcher({ onTagsMatched, onReset }: AIOutfitMatc
             />
             <button
               onClick={handleReset}
-              disabled={isAnalyzing}
-              className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-lg"
             >
               <X className="w-4 h-4" />
             </button>
@@ -195,14 +94,9 @@ export default function AIOutfitMatcher({ onTagsMatched, onReset }: AIOutfitMatc
             <button
               onClick={analyzeImage}
               disabled={isAnalyzing}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg hover:shadow-xl disabled:opacity-50"
             >
-              {isUploading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <Sparkles className="w-5 h-5 animate-spin" />
-                  Uploading image...
-                </span>
-              ) : isAnalyzing ? (
+              {isAnalyzing ? (
                 <span className="flex items-center justify-center gap-2">
                   <Sparkles className="w-5 h-5 animate-spin" />
                   Analyzing magic...

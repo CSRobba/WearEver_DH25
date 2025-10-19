@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { Trade, ClothingItem, CampusLocation } from '@/lib/types';
-import { getUserUploadedItems } from '@/lib/storage';
-import { updateTrade } from '@/lib/tradeStorage';
-import { campusLocations } from '@/lib/campusLocations';
+import { getUserUploadedItems } from '../lib/storage';
+import { updateTrade } from '../lib/tradeStorage';
+import { campusLocations } from '../lib/campusLocations';
 import { MapPin, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-
 
 interface OutgoingTradeCardProps {
   trade: Trade;

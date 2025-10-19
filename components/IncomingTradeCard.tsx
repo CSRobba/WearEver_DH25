@@ -35,7 +35,7 @@ export default function IncomingTradeCard({ trade, onUpdate }: IncomingTradeCard
               className="w-full h-64 object-cover rounded-lg mb-3"
             />
             <h4 className="font-bold text-xl text-gray-800 mb-2">{trade.requestedItem.name}</h4>
-            <p className="text-sm text-gray-600 capitalize">Category: {trade.requestedItem.tags.category}</p>
+            <p className="text-sm text-gray-600 capitalize">Category: {trade.requestedItem.category}</p>
           </div>
 
           {trade.status === 'in progress' ? (
@@ -78,7 +78,7 @@ export default function IncomingTradeCard({ trade, onUpdate }: IncomingTradeCard
               />
               <h4 className="font-bold text-lg text-gray-800 mb-1">{trade.offeredItem.name}</h4>
               <p className="text-sm text-gray-600 mb-2">From: {trade.requesterName}</p>
-              <p className="text-sm text-gray-600 capitalize">Category: {trade.offeredItem.tags.category}</p>
+              <p className="text-sm text-gray-600 capitalize">Category: {trade.offeredItem.category}</p>
             </div>
           ) : (
             <div className="bg-yellow-100 border-2 border-yellow-300 rounded-lg p-4 mb-4">

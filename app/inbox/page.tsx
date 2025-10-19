@@ -2,43 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { Inbox as InboxIcon, ArrowRight } from 'lucide-react';
-import Header from '@/components/Header';
-import OutgoingTradeCard from '@/components/OutgoingTradeCard';
-import IncomingTradeCard from '@/components/IncomingTradeCard';
-import { Trade, ClothingItem } from '@/lib/types';
-import { getAllTrades, createTrade } from '@/lib/tradeStorage';
-import { seedIncomingTrade } from '@/lib/seedTrades';
-
-import { supabase } from "../../supabaseClient";
-
-// Helper function to fetch all clothing items
-async function fetchClothingItems(): Promise<ClothingItem[]> {
-  const { data, error } = await supabase
-    .from("ClothingItems")
-    .select("*")
-    .eq("owner", "You")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Error fetching clothing items:", error);
-    return [];
-  }
-
-  return data as ClothingItem[];
-}
+import Header from '../../components/Header';
+import OutgoingTradeCard from '../../components/OutgoingTradeCard';
+import IncomingTradeCard from '../../components/IncomingTradeCard';
+import { Trade, ClothingItem } from '../../lib/types';
+import { getAllTrades, createTrade } from '../../lib/tradeStorage';
+import { seedIncomingTrade } from '../../lib/seedTrades';
 
 export default function InboxPage() {
-  const [posts, setPosts] = useState<ClothingItem[]>([]);
-  // Fetch posts on mount
-  useEffect(() => {
-    const fetchData = async () => {
-      const items = await fetchClothingItems();
-      setPosts(items);
-    };
-    fetchData();
-  }, []);
-
-
   const [trades, setTrades] = useState<Trade[]>([]);
   const [pendingItem, setPendingItem] = useState<ClothingItem | null>(null);
 
