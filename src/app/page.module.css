@@ -1,19 +1,257 @@
 .page {
   position: relative;
-  border: 2px solid blue;
   width: 100vw;
-  height: 100vh;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: linear-gradient(135deg, #CDB4DB 0%, #FFF0F5 50%, #FFE5EC 100%);
+}
 
+/* Floating sparkles */
+.sparkle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #F6E27F;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #F6E27F;
+  animation: float 6s infinite ease-in-out;
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-100px) translateX(50px) rotate(180deg);
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.6;
+  }
+}
+
+/* Navbar */
+.nav {
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  padding: 1rem 3rem;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid rgba(205, 180, 219, 0.3);
 }
 
-.title {
-  position: absolute;
-  top: 2%;
+.logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #3B2F4A;
+  text-shadow: 0 0 20px rgba(246, 226, 127, 0.4);
 }
 
-.subtitle {
+.navLinks {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navLinks a {
+  color: #3B2F4A;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.navLinks a::after {
+  content: '';
   position: absolute;
-  top: 5%;
+  bottom: -5px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: #F6E27F;
+  transition: width 0.3s ease;
+}
+
+.navLinks a:hover::after {
+  width: 100%;
+}
+
+/* Hero Section */
+.hero {
+  text-align: center;
+  padding: 6rem 2rem 4rem;
+  max-width: 900px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+.heroTitle {
+  font-family: 'Playfair Display', serif;
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+  color: #3B2F4A;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.heroSubtitle {
+  font-size: 1.2rem;
+  color: #5B4E63;
+  margin-bottom: 2.5rem;
+  font-weight: 300;
+}
+
+.ctaButton {
+  background: linear-gradient(135deg, #FFC8DD, #F6E27F);
+  color: #3B2F4A;
+  border: none;
+  border-radius: 50px;
+  padding: 1rem 3rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.4s ease;
+  box-shadow: 0 4px 15px rgba(246, 226, 127, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.ctaButton::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.ctaButton:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.ctaButton:hover {
+  box-shadow: 0 0 30px #F6E27F, 0 4px 20px rgba(246, 226, 127, 0.6);
+  transform: translateY(-3px);
+}
+
+/* Fairy Quote */
+.fairyQuote {
+  text-align: center;
+  margin: 4rem auto;
+  padding: 0 2rem;
+  max-width: 700px;
+  position: relative;
+  z-index: 2;
+}
+
+.fairyQuote p {
+  font-family: 'Great Vibes', cursive;
+  font-size: 2rem;
+  color: #CDB4DB;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Features Section */
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 4rem auto;
+  padding: 0 2rem;
+  position: relative;
+  z-index: 2;
+}
+
+.featureCard {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 2.5rem;
+  text-align: center;
+  border: 2px solid rgba(246, 226, 127, 0.3);
+  transition: all 0.4s ease;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+}
+
+.featureCard:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 40px rgba(246, 226, 127, 0.3);
+  border-color: #F6E27F;
+}
+
+.featureIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.featureCard h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #3B2F4A;
+}
+
+.featureCard p {
+  color: #5B4E63;
+  line-height: 1.6;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 2rem;
+  margin-top: 4rem;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(205, 180, 219, 0.3);
+  position: relative;
+  z-index: 2;
+}
+
+.footer p {
+  color: #5B4E63;
+  font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .heroTitle {
+    font-size: 2.5rem;
+  }
+  
+  .nav {
+    padding: 1rem;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .navLinks {
+    gap: 1rem;
+  }
+
+  .fairyQuote p {
+    font-size: 1.5rem;
+  }
 }
