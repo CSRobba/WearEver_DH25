@@ -97,6 +97,8 @@ export default function UploadPage() {
         alert("Database insert failed!");
         return;
       }
+
+      alert("Succesfully Uploaded Your Clothing Item!")
   
       // Refresh posts
       // const newPosts = await fetchClothingItems();

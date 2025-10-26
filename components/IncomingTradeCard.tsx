@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Trade } from '@/lib/types';
 import { updateTrade } from '@/lib/tradeStorage';
 import { MapPin, Clock, Check, X } from 'lucide-react';
@@ -10,15 +11,59 @@ interface IncomingTradeCardProps {
 }
 
 export default function IncomingTradeCard({ trade, onUpdate }: IncomingTradeCardProps) {
-  const handleAccept = () => {
-    updateTrade(trade.id, { status: 'accepted' });
-    onUpdate();
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const handleAccept = async () => {
+    try {
+      setIsUpdating(true);
+      
+      // Update the incoming trade status
+      const success = await updateTrade(trade.id, { status: 'accepted' });
+      
+      if (success) {
+        // SYNC: Update the corresponding outgoing trade status
+        const outgoingTradeId = trade.id.replace('-incoming', '');
+        await updateTrade(outgoingTradeId, { status: 'accepted' });
+        
+        alert('Trade accepted! 🎉');
+        onUpdate();
+      } else {
+        alert('Failed to accept trade. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error accepting trade:', error);
+      alert('An error occurred while accepting the trade.');
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
-  const handleDecline = () => {
-    if (confirm('Are you sure you want to decline this trade request?')) {
-      updateTrade(trade.id, { status: 'declined' });
-      onUpdate();
+  const handleDecline = async () => {
+    if (!confirm('Are you sure you want to decline this trade request?')) {
+      return;
+    }
+
+    try {
+      setIsUpdating(true);
+      
+      // Update the incoming trade status
+      const success = await updateTrade(trade.id, { status: 'declined' });
+      
+      if (success) {
+        // SYNC: Update the corresponding outgoing trade status
+        const outgoingTradeId = trade.id.replace('-incoming', '');
+        await updateTrade(outgoingTradeId, { status: 'declined' });
+        
+        alert('Trade declined.');
+        onUpdate();
+      } else {
+        alert('Failed to decline trade. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error declining trade:', error);
+      alert('An error occurred while declining the trade.');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -42,18 +87,34 @@ export default function IncomingTradeCard({ trade, onUpdate }: IncomingTradeCard
             <div className="space-y-3">
               <button
                 onClick={handleAccept}
-                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white py-3 px-4 rounded-lg font-semibold hover:from-green-600 hover:to-emerald-600 transition-all shadow-md flex items-center justify-center gap-2"
+                disabled={isUpdating || !trade.offeredItem}
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white py-3 px-4 rounded-lg font-semibold hover:from-green-600 hover:to-emerald-600 transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Check className="w-5 h-5" />
-                Accept Trade
+                {isUpdating ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-5 h-5" />
+                    Accept Trade
+                  </>
+                )}
               </button>
               <button
                 onClick={handleDecline}
-                className="w-full bg-gradient-to-r from-red-500 to-pink-500 text-white py-3 px-4 rounded-lg font-semibold hover:from-red-600 hover:to-pink-600 transition-all shadow-md flex items-center justify-center gap-2"
+                disabled={isUpdating}
+                className="w-full bg-gradient-to-r from-red-500 to-pink-500 text-white py-3 px-4 rounded-lg font-semibold hover:from-red-600 hover:to-pink-600 transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <X className="w-5 h-5" />
                 Decline Trade
               </button>
+              {!trade.offeredItem && (
+                <p className="text-sm text-yellow-600 text-center">
+                  ⚠️ Wait for an offer before accepting
+                </p>
+              )}
             </div>
           ) : (
             <div className={`px-4 py-3 rounded-lg font-semibold text-center ${

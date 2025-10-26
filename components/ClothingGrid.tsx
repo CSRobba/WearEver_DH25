@@ -2,8 +2,9 @@
 
 import { useEffect, useState, ChangeEvent } from "react";
 import { useRouter } from 'next/navigation';
-import { ClothingItem } from '@/lib/types';
+import { ClothingItem, Trade } from '@/lib/types';
 import { User, Tag, ArrowLeftRight } from 'lucide-react';
+import { createTrade } from '@/lib/tradeStorage';
 
 import { supabase } from "../supabaseClient"
 
@@ -14,14 +15,50 @@ interface ClothingGridProps {
 export default function ClothingGrid({ items }: ClothingGridProps) {
   const router = useRouter();
 
-  const handleRequestTrade = (item: ClothingItem) => {
+  const handleRequestTrade = async (item: ClothingItem) => {
     if (item.owner === 'You') {
       alert('You cannot request a trade for your own item!');
       return;
     }
     
-    // localStorage.setItem('wearever_pending_trade_item', JSON.stringify(item));
-    router.push(`/inbox/`);
+    console.log('Starting trade request for item:', item);
+    
+    try {
+      // Create a new outgoing trade (from your perspective)
+      const outgoingTrade: Trade = {
+        id: Date.now().toString(),
+        requestedItemId: item.id.toString(),
+        requestedItem: item,
+        offeredItemId: null,
+        offeredItem: null,
+        requesterName: 'You',
+        ownerName: item.owner,
+        meetingPlace: null,
+        meetingTime: null,
+        status: 'in progress',
+        isIncoming: false,
+        createdAt: Date.now()
+      };
+      
+      console.log('Creating outgoing trade:', outgoingTrade);
+      
+      // Create the outgoing trade
+      const outgoingSuccess = await createTrade(outgoingTrade);
+      console.log('Outgoing trade created:', outgoingSuccess);
+      
+      if (!outgoingSuccess) {
+        alert('Failed to create outgoing trade. Check console for errors.');
+        return;
+      }
+      
+      console.log('Outgoing trade created successfully! Navigating to inbox...');
+      
+      // Navigate to inbox
+      router.push(`/inbox/`);
+    } catch (error) {
+      console.error('Error creating trade:', error);
+      alert('Failed to create trade request. Please try again.');
+    }
   };
 
   return (

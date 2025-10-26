@@ -5,64 +5,54 @@ import { Inbox as InboxIcon, ArrowRight } from 'lucide-react';
 import Header from '../../components/Header';
 import OutgoingTradeCard from '../../components/OutgoingTradeCard';
 import IncomingTradeCard from '../../components/IncomingTradeCard';
-import { Trade, ClothingItem } from '../../lib/types';
-import { getAllTrades, createTrade } from '../../lib/tradeStorage';
-import { seedIncomingTrade } from '../../lib/seedTrades';
+import { Trade } from '../../lib/types';
+import { getAllTrades, getOutgoingTrades, getIncomingTrades } from '../../lib/tradeStorage';
 
 export default function InboxPage() {
-  const [trades, setTrades] = useState<Trade[]>([]);
-  const [pendingItem, setPendingItem] = useState<ClothingItem | null>(null);
+  const [outgoingTrades, setOutgoingTrades] = useState<Trade[]>([]);
+  const [incomingTrades, setIncomingTrades] = useState<Trade[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    seedSampleTrade();
     loadTrades();
-    checkPendingTrade();
   }, []);
 
-  const seedSampleTrade = () => {
-    const allTrades = getAllTrades();
-    const hasIncomingTrades = allTrades.some(t => t.isIncoming);
-    
-    if (!hasIncomingTrades) {
-      seedIncomingTrade();
+  const loadTrades = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Fetch both types of trades in parallel
+      const [outgoing, incoming] = await Promise.all([
+        getOutgoingTrades(),
+        getIncomingTrades()
+      ]);
+      
+      setOutgoingTrades(outgoing);
+      setIncomingTrades(incoming);
+    } catch (error) {
+      console.error('Error loading trades:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const loadTrades = () => {
-    setTrades(getAllTrades());
-  };
-
-  const checkPendingTrade = () => {
-    if (typeof window === 'undefined') return;
-    
-    const pendingTradeItem = localStorage.getItem('wearever_pending_trade_item');
-    if (pendingTradeItem) {
-      const item: ClothingItem = JSON.parse(pendingTradeItem);
-      setPendingItem(item);
-      
-      const newTrade: Trade = {
-        id: `trade-${Date.now()}`,
-        requestedItemId: item.id.toString(),
-        requestedItem: item,
-        offeredItemId: null,
-        offeredItem: null,
-        requesterName: 'You',
-        ownerName: item.owner,
-        meetingPlace: null,
-        meetingTime: null,
-        status: 'in progress',
-        isIncoming: false,
-        createdAt: Date.now()
-      };
-      
-      createTrade(newTrade);
-      localStorage.removeItem('wearever_pending_trade_item');
-      loadTrades();
-    }
-  };
-
-  const outgoingTrades = trades.filter(t => !t.isIncoming);
-  const incomingTrades = trades.filter(t => t.isIncoming);
+  if (isLoading) {
+    return (
+      <div className="min-h-screen">
+        <Header />
+        <main className="container mx-auto px-4 py-8">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-4 border-fairytale-lavender/30">
+            <div className="flex items-center justify-center py-20">
+              <div className="text-center">
+                <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading your trades...</p>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">

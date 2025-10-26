@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShoppingBag, Plus, Trash2 } from 'lucide-react';
 import { ClothingItem } from '@/lib/types';
-import { getUserUploadedItems, deleteUserUploadedItem } from '@/lib/storage';
 import Header from '@/components/Header';
 
 import { supabase } from "../../supabaseClient";
@@ -27,6 +26,8 @@ async function fetchClothingItems(): Promise<ClothingItem[]> {
 
 export default function ClosetPage() {
   const [posts, setPosts] = useState<ClothingItem[]>([]);
+  const [isDeleting, setIsDeleting] = useState<number | null>(null);
+  const router = useRouter();
   
   // Fetch posts on mount
   useEffect(() => {
@@ -37,19 +38,38 @@ export default function ClosetPage() {
     fetchData();
   }, []);
 
-  const router = useRouter();
-  // const [userItems, setUserItems] = useState<ClothingItem[]>([]);
+  const handleDelete = async (itemId: number) => {
+    if (!confirm('Are you sure you want to delete this item? This action cannot be undone.')) {
+      return;
+    }
 
-  // useEffect(() => {
-  //   setUserItems(getUserUploadedItems());
-  // }, []);
+    try {
+      setIsDeleting(itemId);
 
-  // const handleDelete = (itemId: string) => {
-  //   if (confirm('Are you sure you want to delete this item?')) {
-  //     deleteUserUploadedItem(itemId);
-  //     setUserItems(getUserUploadedItems());
-  //   }
-  // };
+      // Delete from Supabase
+      const { error } = await supabase
+        .from('ClothingItems')
+        .delete()
+        .eq('id', itemId);
+
+      if (error) {
+        console.error('Error deleting item:', error);
+        alert('Failed to delete item. Please try again.');
+        return;
+      }
+
+      // Update local state to remove the deleted item
+      setPosts(prevPosts => prevPosts.filter(item => item.id !== itemId));
+      
+      // Optional: Show success message
+      alert('Item deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      alert('An error occurred while deleting the item.');
+    } finally {
+      setIsDeleting(null);
+    }
+  };
 
   return (
     <div className="min-h-screen">
@@ -106,11 +126,16 @@ export default function ClosetPage() {
                       {item.category}
                     </div>
                     <button
-                      // onClick={() => handleDelete(item.id)}
-                      className="absolute top-2 left-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => handleDelete(item.id)}
+                      disabled={isDeleting === item.id}
+                      className="absolute top-2 left-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Delete item"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      {isDeleting === item.id ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
                   

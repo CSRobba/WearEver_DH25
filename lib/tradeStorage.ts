@@ -1,63 +1,117 @@
 import { Trade } from './types';
+import { supabase } from '../supabaseClient';
 
-const TRADES_STORAGE_KEY = 'wearever_trades';
-
-export function getAllTrades(): Trade[] {
-  if (typeof window === 'undefined') return [];
-  
+export async function getAllTrades(): Promise<Trade[]> {
   try {
-    const stored = localStorage.getItem(TRADES_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
+    const { data, error } = await supabase
+      .from('Trades')
+      .select('*')
+      .order('createdAt', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching trades:', error);
+      return [];
+    }
+
+    return data || [];
   } catch (error) {
-    console.error('Error loading trades:', error);
+    console.error('Error fetching trades:', error);
     return [];
   }
 }
 
-export function getOutgoingTrades(): Trade[] {
-  return getAllTrades().filter(trade => !trade.isIncoming);
-}
-
-export function getIncomingTrades(): Trade[] {
-  return getAllTrades().filter(trade => trade.isIncoming);
-}
-
-export function createTrade(trade: Trade): void {
-  if (typeof window === 'undefined') return;
-  
+export async function getOutgoingTrades(): Promise<Trade[]> {
   try {
-    const trades = getAllTrades();
-    trades.push(trade);
-    localStorage.setItem(TRADES_STORAGE_KEY, JSON.stringify(trades));
+    const { data, error } = await supabase
+      .from('Trades')
+      .select('*')
+      .eq('isIncoming', false)
+      .order('createdAt', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching outgoing trades:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching outgoing trades:', error);
+    return [];
+  }
+}
+
+export async function getIncomingTrades(): Promise<Trade[]> {
+  try {
+    const { data, error } = await supabase
+      .from('Trades')
+      .select('*')
+      .eq('isIncoming', true)
+      .order('createdAt', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching incoming trades:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching incoming trades:', error);
+    return [];
+  }
+}
+
+export async function createTrade(trade: Trade): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('Trades')
+      .insert([trade]);
+
+    if (error) {
+      console.error('Error creating trade:', error);
+      return false;
+    }
+
+    return true;
   } catch (error) {
     console.error('Error creating trade:', error);
+    return false;
   }
 }
 
-export function updateTrade(tradeId: string, updates: Partial<Trade>): void {
-  if (typeof window === 'undefined') return;
-  
+export async function updateTrade(tradeId: string, updates: Partial<Trade>): Promise<boolean> {
   try {
-    const trades = getAllTrades();
-    const index = trades.findIndex(t => t.id === tradeId);
-    
-    if (index !== -1) {
-      trades[index] = { ...trades[index], ...updates };
-      localStorage.setItem(TRADES_STORAGE_KEY, JSON.stringify(trades));
+    const { error } = await supabase
+      .from('Trades')
+      .update(updates)
+      .eq('id', tradeId);
+
+    if (error) {
+      console.error('Error updating trade:', error);
+      return false;
     }
+
+    return true;
   } catch (error) {
     console.error('Error updating trade:', error);
+    return false;
   }
 }
 
-export function deleteTrade(tradeId: string): void {
-  if (typeof window === 'undefined') return;
-  
+export async function deleteTrade(tradeId: string): Promise<boolean> {
   try {
-    const trades = getAllTrades();
-    const filtered = trades.filter(t => t.id !== tradeId);
-    localStorage.setItem(TRADES_STORAGE_KEY, JSON.stringify(filtered));
+    const { error } = await supabase
+      .from('Trades')
+      .delete()
+      .eq('id', tradeId);
+
+    if (error) {
+      console.error('Error deleting trade:', error);
+      return false;
+    }
+
+    return true;
   } catch (error) {
     console.error('Error deleting trade:', error);
+    return false;
   }
 }
