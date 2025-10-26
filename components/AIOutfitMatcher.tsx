@@ -11,7 +11,6 @@ interface AIOutfitMatcherProps {
 
 // Your actual API Gateway endpoint
 const API_ENDPOINT = process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'https://ucxsm64wu3.execute-api.us-east-1.amazonaws.com/dev';
-const S3_BUCKET = 'my-fashion-images';
 
 export default function AIOutfitMatcher({ onTagsMatched, onReset }: AIOutfitMatcherProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
